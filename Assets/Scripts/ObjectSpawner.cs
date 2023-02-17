@@ -1,12 +1,16 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
-using Random = UnityEngine.Random;
+
 
 public class ObjectSpawner : MonoBehaviour
 {
     private Transform _spawnerTransform;
     public GameObject RoadPrefab;
+    public GameObject FuelPrefab;
+    public float minFuelSpawnTime;
+    public float maxFuelSpawnTime;
     public List<GameObject> CarsPrefabs;
     public List<GameObject> DesertPrefabs;
     public float[] CarsSpawnsPositionsX;
@@ -15,7 +19,23 @@ public class ObjectSpawner : MonoBehaviour
     public float CarsSpeed;
     public float RoadSpeed;
 
+    [Space(10)] public GameObject EndGameMenu;
+
     [HideInInspector] public bool _gameEnded;
+
+    [HideInInspector] public static ObjectSpawner Instance;
+
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            Destroy(this.gameObject);
+        }
+    }
 
     private void Start()
     {
@@ -23,22 +43,29 @@ public class ObjectSpawner : MonoBehaviour
         InvokeRepeating("SpawnRoad", 0, 2.89f);
         StartCoroutine(SpawnCar());
         StartCoroutine(SpawnDesertPrefabs());
+        StartCoroutine(SpawnFuel());
+        
     }
 
+   
     private void SpawnRoad()
     {
         Instantiate(RoadPrefab, _spawnerTransform.position, Quaternion.Euler(0, 180, 0));
     }
+   
 
     private void Update()
     {
+        
+
         if (_gameEnded)
         {
             StopAllCoroutines();
             CancelInvoke("SpawnRoad");
+            EndGameMenu.SetActive(true);
         }
     }
-
+   
     private IEnumerator SpawnCar()
     {
         yield return new WaitForSeconds(Random.Range(minCarSpawnTime, maxCarSpawnTime));
@@ -59,5 +86,15 @@ public class ObjectSpawner : MonoBehaviour
                 _spawnerTransform.position.z),
             Quaternion.Euler(0, 180, 0));
         StartCoroutine(SpawnDesertPrefabs());
+    }
+    private IEnumerator SpawnFuel() 
+    {
+        yield return new WaitForSeconds(Random.Range(minFuelSpawnTime, maxFuelSpawnTime));
+        float spawnPosX = Random.Range(1, 5);
+        Instantiate(FuelPrefab, new Vector3(Random.Range(0, 2) == 0 ? spawnPosX : -spawnPosX, _spawnerTransform.position.y + 0.45f,
+        _spawnerTransform.position.z), Quaternion.Euler(0, 180, 0))
+        .GetComponent<ObjectMover>().SetSpeed(45f);
+        StartCoroutine(SpawnFuel());
+
     }
 }

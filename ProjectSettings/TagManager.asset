@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Destroy
   - Car
+  - +fuel
   layers:
   - Default
   - TransparentFX
